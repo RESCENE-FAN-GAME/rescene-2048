@@ -103,8 +103,44 @@
       }
       window.addEventListener("resize", fitCanvas);
       window.addEventListener("orientationchange", function () { setTimeout(fitCanvas, 300); });
-      document.addEventListener("focusout", function () { setTimeout(fitCanvas, 300); }); // 키보드가 내려가면 다시 맞춘다
       fitCanvas();
+
+      // 휴대폰 키보드가 입력칸을 가리면 게임 화면 전체를 그만큼 위로 올린다 (크기는 그대로).
+      // 입력칸 위치는 올리기 전 기준으로 기억해 둔다 (게임이 입력칸을 다음 프레임에 옮기므로 그때그때 재면 어긋난다).
+      var shift = 0;
+      var inputBottom = 0;
+      function setShift(value) {
+        value = Math.max(0, Math.round(value));
+        if (value === shift) return;
+        shift = value;
+        container.style.transform = shift ? "translateY(" + (-shift) + "px)" : "";
+      }
+      function keepInputVisible() {
+        var vv = window.visualViewport;
+        if (!vv || !isTyping() || inputBottom <= 0) {
+          setShift(0);
+          return;
+        }
+        var visibleBottom = vv.offsetTop + vv.height;
+        setShift(inputBottom + 24 - visibleBottom);
+      }
+      document.addEventListener("focusin", function () {
+        if (!isTyping()) return;
+        inputBottom = document.activeElement.getBoundingClientRect().bottom + shift;
+        setTimeout(keepInputVisible, 300);
+      });
+      document.addEventListener("focusout", function () {
+        setTimeout(function () {
+          if (isTyping()) return;
+          inputBottom = 0;
+          setShift(0);
+          fitCanvas(); // 키보드가 내려가면 다시 맞춘다
+        }, 300);
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", keepInputVisible);
+        window.visualViewport.addEventListener("scroll", keepInputVisible);
+      }
 
       function showError(message) {
         var box = document.querySelector("#error");
