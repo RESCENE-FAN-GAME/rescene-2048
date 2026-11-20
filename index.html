@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- RESCENE 2048 WebGL 페이지: 9:16 세로 화면을 창 크기에 맞춰 가운데에 띄우는 템플릿 (Unity 기본 템플릿 기반) -->
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <meta name="description" content="RESCENE 2048 — 비공식 팬게임이며 소속사와 무관합니다">
+    <title>RESCENE 2048 · 비공식 팬게임</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #F7F2F5;
+        color: #40333B;
+        font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      }
+      #container {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* 9:16 비율을 지키면서 창에 꽉 차게 (주소창이 줄었다 늘었다 하는 모바일은 dvh 기준) */
+      #unity-canvas {
+        display: block;
+        width: min(100vw, calc(100vh * 9 / 16));
+        height: min(100vh, calc(100vw * 16 / 9));
+        width: min(100vw, calc(100dvh * 9 / 16));
+        height: min(100dvh, calc(100vw * 16 / 9));
+        background: #F7F2F5;
+        outline: none;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #loading {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        font-size: 18px;
+      }
+      #progress-empty {
+        width: 220px;
+        height: 10px;
+        border-radius: 5px;
+        background: #E0D6DC;
+        overflow: hidden;
+      }
+      #progress-full {
+        width: 0%;
+        height: 100%;
+        background: #40333B;
+      }
+      #error {
+        position: absolute;
+        max-width: 80vw;
+        padding: 16px;
+        background: #FFFFFF;
+        border: 2px solid #9E3845;
+        display: none;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="loading">
+        <div>불러오는 중…</div>
+        <div id="progress-empty"><div id="progress-full"></div></div>
+        <div style="font-size: 13px; opacity: 0.7;">비공식 팬게임이며 소속사와 무관합니다</div>
+      </div>
+      <div id="error"></div>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      function showError(message) {
+        var box = document.querySelector("#error");
+        box.textContent = "게임을 불러오지 못했어요. 새로고침해 주세요. (" + message + ")";
+        box.style.display = "block";
+        document.querySelector("#loading").style.display = "none";
+      }
+
+      var buildUrl = "Build";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/6dd35251f2fe13873d120f70a4941893.data.unityweb",
+        frameworkUrl: buildUrl + "/6d22f938f58a0061dda0d5e5617207fe.framework.js.unityweb",
+        codeUrl: buildUrl + "/01b2c5b9b4c87bafd05eca524399b388.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "RESCENE 2048",
+        productVersion: "1.0",
+        showBanner: function (message, type) {
+          if (type === "error") showError(message);
+          else console.warn(message);
+        },
+      };
+
+      var script = document.createElement("script");
+      script.src = buildUrl + "/6e96affa76e9b0ad894b9a796e1849a3.loader.js";
+      script.onload = function () {
+        createUnityInstance(canvas, config, function (progress) {
+          document.querySelector("#progress-full").style.width = 100 * progress + "%";
+        }).then(function () {
+          document.querySelector("#loading").style.display = "none";
+        }).catch(showError);
+      };
+      script.onerror = function () { showError("loader"); };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
