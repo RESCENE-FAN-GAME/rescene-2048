@@ -86,17 +86,17 @@
       var container = document.querySelector("#container");
 
       // 9:16 비율로 창에 맞춘다. 닉네임 입력 등으로 휴대폰 키보드가 떠 있는 동안에는
-      // 창 높이가 줄어도 게임 화면을 그대로 둔다 (게임 화면이 작아지지 않게).
-      var fittedHeight = 0;
+      // 창 높이가 바뀌어도(키보드로 줄거나, 브라우저 도구 막대가 숨어 늘어나도) 게임 화면의 크기와 위치를 그대로 둔다.
+      var fitted = false;
       function isTyping() {
         var active = document.activeElement;
         return !!active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
       }
       function fitCanvas() {
+        if (isTyping() && fitted) return;
         var vw = window.innerWidth;
         var vh = window.innerHeight;
-        if (isTyping() && fittedHeight > 0 && vh < fittedHeight) return;
-        fittedHeight = vh;
+        fitted = true;
         container.style.height = vh + "px";
         canvas.style.width = Math.min(vw, vh * 9 / 16) + "px";
         canvas.style.height = Math.min(vh, vw * 16 / 9) + "px";
@@ -104,6 +104,10 @@
       window.addEventListener("resize", fitCanvas);
       window.addEventListener("orientationchange", function () { setTimeout(fitCanvas, 300); });
       document.addEventListener("focusout", function () { setTimeout(fitCanvas, 300); }); // 키보드가 내려가면 다시 맞춘다
+      // 브라우저가 입력칸을 보여 주려고 페이지를 스크롤해도 바로 되돌려 게임 화면이 움직이지 않게 한다
+      window.addEventListener("scroll", function () {
+        if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+      });
       fitCanvas();
 
       function showError(message) {
